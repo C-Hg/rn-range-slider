@@ -22,3 +22,24 @@ export const getValueForPosition = (positionInView, containerWidth, thumbWidth, 
   }
   return clamp(min + Math.round(relPosition / relStepUnit) * step, min, max);
 };
+
+export const getHighPosition = (high, min, max, containerWidth, thumbWidth) => {
+  return (high - min) / (max - min) * (containerWidth - thumbWidth);
+}
+
+export const getLowPosition = (low, min, max, containerWidth, thumbWidth) => {
+  return (low - min) / (max - min) * (containerWidth - thumbWidth);
+}
+
+export const getRightAndLeftValues = (inPropsRef, containerWidthRef, thumbWidth, disableRange) => {
+  const { low, high, min, max } = inPropsRef.current;
+  const { current: containerWidth } = containerWidthRef;
+  const fullScale = (max - min) / (containerWidth - thumbWidth);
+  const leftValue = (low - min) / fullScale;
+  const rightValue = (max - high) / fullScale;
+
+  return [
+    disableRange ? 0 : leftValue,
+    disableRange ? (containerWidth - thumbWidth) - leftValue : rightValue
+  ];
+}

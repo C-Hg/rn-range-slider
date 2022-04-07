@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useRef, useMemo } from 'react';
 import { Animated, I18nManager } from 'react-native';
-import { clamp } from './helpers';
+import { clamp, getRightAndLeftValues } from './helpers';
 import styles from './styles';
 import FollowerContainer from './LabelContainer';
 
@@ -40,6 +40,7 @@ export const useLowHigh = (lowProp, highProp, min, max, step) => {
 
 /**
  * Sets the current value of widthRef and calls the callback with new width parameter.
+ * Used for the main container is fixedContainerWidth is not set and for the thumb follower
  * @param widthRef
  * @param callback
  * @returns {function({nativeEvent: *}): void}
@@ -49,7 +50,7 @@ export const useWidthLayout = (widthRef, callback) => {
     const { layout: {width}} = nativeEvent;
     const { current: w } = widthRef;
     if (w !== width) {
-      widthRef.current = width;
+        widthRef.current = width; 
       if (callback) {
         callback(width);
       }
@@ -106,16 +107,13 @@ export const useThumbFollower = (containerWidthRef, gestureStateRef, renderConte
 };
 
 export const useSelectedRail = (inPropsRef, containerWidthRef, thumbWidth, disableRange) => {
-  const { current: left } = useRef(new Animated.Value(0));
-  const { current: right } = useRef(new Animated.Value(0));
+  const [leftValue, rightValue] = getRightAndLeftValues(inPropsRef, containerWidthRef, thumbWidth, disableRange)
+  const { current: left } = useRef(new Animated.Value(leftValue));
+  const { current: right } = useRef(new Animated.Value(rightValue));
   const update = useCallback(() => {
-    const { low, high, min, max } = inPropsRef.current;
-    const { current: containerWidth } = containerWidthRef;
-    const fullScale = (max - min) / (containerWidth - thumbWidth);
-    const leftValue = (low - min) / fullScale;
-    const rightValue = (max - high) / fullScale;
-    left.setValue(disableRange ? 0 : leftValue);
-    right.setValue(disableRange ? (containerWidth - thumbWidth) - leftValue : rightValue);
+    const [leftValue, rightValue] = getRightAndLeftValues(inPropsRef, containerWidthRef, thumbWidth, disableRange)
+    left.setValue(leftValue);
+    right.setValue(rightValue);
   }, [inPropsRef, containerWidthRef, disableRange, thumbWidth, left, right]);
   const styles = useMemo(() => ({
     position: 'absolute',
