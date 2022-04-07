@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 
 import styles from './styles';
 import {useThumbFollower, useLowHigh, useWidthLayout, useLabelContainerProps, useSelectedRail} from './hooks';
-import {clamp, getValueForPosition, isLowCloser} from './helpers';
+import {clamp, getValueForPosition, isLowCloser, getHighPosition, getLowPosition} from './helpers';
 
 const trueFunc = () => true;
 
@@ -28,21 +28,24 @@ const Slider = (
     renderNotch,
     renderRail,
     renderRailSelected,
+    fixedContainerWidth,
+    fixedThumbWidth,
     ...restProps
   }
 ) => {
+  const containerWidthRef = useRef(fixedContainerWidth);
+  const [thumbWidth, setThumbWidth] = useState(fixedThumbWidth);
+
   const { inPropsRef, inPropsRefPrev, setLow, setHigh } = useLowHigh(lowProp, disableRange ? max : highProp, min, max, step);
-  const lowThumbXRef = useRef(new Animated.Value(0));
-  const highThumbXRef = useRef(new Animated.Value(0));
-  const pointerX = useRef(new Animated.Value(0)).current;
+  
+  const lowThumbXRef = useRef(new Animated.Value(getLowPosition(inPropsRef.current.low, min, max, containerWidthRef.current, thumbWidth)));
+  const highThumbXRef = useRef(new Animated.Value(disableRange ? 0 : getHighPosition(inPropsRef.current.high, min, max, containerWidthRef.current, thumbWidth)));
   const { current: lowThumbX } = lowThumbXRef;
   const { current: highThumbX } = highThumbXRef;
+  const pointerX = useRef(new Animated.Value(0)).current;
 
   const gestureStateRef = useRef({ isLow: true, lastValue: 0, lastPosition: 0 });
   const [isPressed, setPressed] = useState(false);
-
-  const containerWidthRef = useRef(0);
-  const [thumbWidth, setThumbWidth] = useState(0);
 
   const [selectedRailStyle, updateSelectedRail] = useSelectedRail(inPropsRef, containerWidthRef, thumbWidth, disableRange);
 
@@ -54,11 +57,11 @@ const Slider = (
     const { low, high } = inPropsRef.current;
     if (!disableRange) {
       const { current: highThumbX } = highThumbXRef;
-      const highPosition = (high - min) / (max - min) * (containerWidth - thumbWidth);
+      const highPosition = getHighPosition(high, min, max, containerWidth, thumbWidth);
       highThumbX.setValue(highPosition);
     }
     const { current: lowThumbX } = lowThumbXRef;
-    const lowPosition = (low - min) / (max - min) * (containerWidth - thumbWidth);
+    const lowPosition = getLowPosition(low, min, max, containerWidth, thumbWidth);
     lowThumbX.setValue(lowPosition);
     updateSelectedRail();
     onValueChanged?.(low, high, false);
@@ -75,13 +78,14 @@ const Slider = (
     updateThumbs();
   }, [updateThumbs]);
 
-  const handleContainerLayout = useWidthLayout(containerWidthRef, updateThumbs);
+  const handleContainerLayout = fixedContainerWidth ? updateThumbs() : useWidthLayout(containerWidthRef, updateThumbs);
   const handleThumbLayout = useCallback(({ nativeEvent }) => {
     const { layout: {width}} = nativeEvent;
-    if (thumbWidth !== width) {
+    if (thumbWidth !== width && fixedThumbWidth === 0) {
+      
       setThumbWidth(width);
     }
-  }, [thumbWidth]);
+  }, [fixedThumbWidth, thumbWidth]);
 
   const lowStyles = useMemo(() => {
     return {transform: [{translateX: lowThumbX}]};
@@ -221,6 +225,8 @@ Slider.propTypes = {
   onValueChanged: PropTypes.func,
   onTouchStart: PropTypes.func,
   onTouchEnd: PropTypes.func,
+  containerWidth: PropTypes.number,
+  thumbWidth: PropTypes.number,
 };
 
 Slider.defaultProps = {
@@ -229,6 +235,8 @@ Slider.defaultProps = {
   disableRange: false,
   disabled: false,
   floatingLabel: false,
+  fixedContainerWidth: 0,
+  fixedThumbWidth: 0,
 };
 
 export default memo(Slider);
