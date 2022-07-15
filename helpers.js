@@ -1,3 +1,6 @@
+// the best practice for accessibility is around 40, so 20 from the center of the thumb
+const RANGE_TO_CAPTURE_FOCUS_ON_THUMB = 20;
+
 export const isLowCloser = (downX, lowPosition, highPosition) => {
   if (lowPosition === highPosition) {
     return downX < lowPosition;
@@ -42,4 +45,20 @@ export const getRightAndLeftValues = (inPropsRef, containerWidthRef, thumbWidth,
     disableRange ? 0 : leftValue,
     disableRange ? (containerWidth - thumbWidth) - leftValue : rightValue
   ];
+}
+
+/**
+ * Only captures the focus if the user touches one of the thumbs.
+ * This is the expected behavior for a slider.
+ */
+export const shouldCaptureFocus = (evt, thumbWidth, lowThumbXRef, highThumbXRef, disableRange) => {
+  const { locationX } = evt.nativeEvent;
+  const correctedLocationX = locationX - thumbWidth / 2; // correct for the half of the thumb width
+  if (correctedLocationX - RANGE_TO_CAPTURE_FOCUS_ON_THUMB <= lowThumbXRef.current._value  && correctedLocationX + RANGE_TO_CAPTURE_FOCUS_ON_THUMB > lowThumbXRef.current._value) {
+    return true
+  }
+  if (!disableRange && highThumbXRef.current._value - RANGE_TO_CAPTURE_FOCUS_ON_THUMB < correctedLocationX && correctedLocationX < highThumbXRef.current._value + RANGE_TO_CAPTURE_FOCUS_ON_THUMB) {
+    return true;
+  }
+  return false
 }
