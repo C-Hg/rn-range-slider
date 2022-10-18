@@ -24,7 +24,7 @@ import {
   useLabelContainerProps,
   useSelectedRail,
 } from './hooks';
-import {clamp, getHighPosition, getLowPosition, getValueForPosition, isLowCloser} from './helpers';
+import {clamp, getHighPosition, getLowPosition, getValueForPosition, isLowCloser, shouldCaptureFocus} from './helpers';
 
 const trueFunc = () => true;
 const falseFunc = () => false;
@@ -34,6 +34,7 @@ export interface SliderProps extends ViewProps {
   max: number;
   fixedContainerWidth?: number;
   fixedThumbWidth?: number;
+  focusHeightLimit?: number;
   minRange?: number;
   step: number;
   renderThumb: (name: 'high' | 'low') => ReactNode;
@@ -55,6 +56,7 @@ export interface SliderProps extends ViewProps {
 const Slider: React.FC<SliderProps> = ({
   fixedContainerWidth = 0,
   fixedThumbWidth = 0,
+  focusHeightLimit = 100,
   min,
   max,
   minRange = 0,
@@ -77,6 +79,7 @@ const Slider: React.FC<SliderProps> = ({
 }) => {
   const containerWidthRef = useRef(fixedContainerWidth);
   const [thumbWidth, setThumbWidth] = useState(fixedThumbWidth);
+  const [touchCanceled, setTouchCanceled] = useState(false);
 
   const {inPropsRef, inPropsRefPrev, setLow, setHigh} = useLowHigh(
     lowProp,
@@ -190,16 +193,16 @@ const Slider: React.FC<SliderProps> = ({
   const {panHandlers} = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponderCapture: falseFunc,
-        onMoveShouldSetPanResponderCapture: falseFunc,
+        onStartShouldSetPanResponder: (evt) => shouldCaptureFocus(evt, thumbWidth, lowThumbXRef, highThumbXRef, disableRange),
+        onStartShouldSetPanResponderCapture: (evt) => shouldCaptureFocus(evt, thumbWidth, lowThumbXRef, highThumbXRef, disableRange),
+        onMoveShouldSetPanResponder: (evt) => shouldCaptureFocus(evt, thumbWidth, lowThumbXRef, highThumbXRef, disableRange),
+        onMoveShouldSetPanResponderCapture: (evt) => shouldCaptureFocus(evt, thumbWidth, lowThumbXRef, highThumbXRef, disableRange),
+        onPanResponderTerminate: () => {
+          setPressed(false);
+        },
+        
         onPanResponderTerminationRequest: falseFunc,
-        onPanResponderTerminate: trueFunc,
         onShouldBlockNativeResponder: trueFunc,
-
-        onMoveShouldSetPanResponder: (
-          evt: GestureResponderEvent,
-          gestureState: PanResponderGestureState,
-        ) => Math.abs(gestureState.dx) > 2 * Math.abs(gestureState.dy),
 
         onPanResponderGrant: ({nativeEvent}, gestureState) => {
           if (disabled) {
@@ -274,13 +277,30 @@ const Slider: React.FC<SliderProps> = ({
 
         onPanResponderMove: disabled
           ? undefined
-          : Animated.event([null, {moveX: pointerX}], {useNativeDriver: false}),
+          : (e, gestureState) => {
+            const {dy, vy, moveX} = gestureState;
+            if(touchCanceled) {
+              return
+            }
+            if(Math.abs(dy) > focusHeightLimit || Math.abs(vy) > 1) {
+              // cancel the gesture if the user has moved the thumb too far, or vertically rapidly suggesting they wanted to scroll vertically
+              setPressed(false);
+              setTouchCanceled(true)
+              return
+            }
+            pointerX.setValue(moveX)
+          },
 
         onPanResponderRelease: () => {
+          if(!touchCanceled) {
+            // cancel the gesture if the user has moved the thumb too far
+            const { low, high } = inPropsRef.current;
+            onSliderTouchEnd?.(low, high);
+          }
           setPressed(false);
-          const {low, high} = inPropsRef.current;
-          onSliderTouchEnd?.(low, high);
+          setTouchCanceled(false)
         },
+
       }),
     [
       pointerX,
