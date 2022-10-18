@@ -1,3 +1,6 @@
+import { InProps } from "./interfaces";
+import { MutableRefObject } from 'react';
+
 export const isLowCloser = (
   downX: number,
   lowPosition: number,
@@ -33,3 +36,41 @@ export const getValueForPosition = (
   }
   return clamp(min + Math.round(relPosition / relStepUnit) * step, min, max);
 };
+
+export const getHighPosition = (
+  high: number,
+  min: number,
+  max: number,
+  containerWidth: number, 
+  thumbWidth: number,
+  ) => {
+  return (high - min) / (max - min) * (containerWidth - thumbWidth);
+}
+
+export const getLowPosition = (
+  low: number,
+  min: number,
+  max: number,
+  containerWidth: number,
+  thumbWidth: number,
+  ) => {
+  return (low - min) / (max - min) * (containerWidth - thumbWidth);
+}
+
+export const getRightAndLeftValues = (
+  inPropsRef: MutableRefObject<InProps>,
+  containerWidthRef,
+  thumbWidth,
+  disableRange,
+  ) => {
+  const { low, high, min, max } = inPropsRef.current;
+  const { current: containerWidth } = containerWidthRef;
+  const fullScale = (max - min) / (containerWidth - thumbWidth);
+  const leftValue = (low - min) / fullScale;
+  const rightValue = (max - high) / fullScale;
+
+  return [
+    disableRange ? 0 : leftValue,
+    disableRange ? (containerWidth - thumbWidth) - leftValue : rightValue
+  ];
+}

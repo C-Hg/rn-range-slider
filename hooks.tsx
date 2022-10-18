@@ -7,9 +7,10 @@ import React, {
   ReactNode,
 } from 'react';
 import {Animated, I18nManager} from 'react-native';
-import {clamp} from './helpers';
+import {clamp, getRightAndLeftValues} from './helpers';
 import styles from './styles';
 import FollowerContainer from './LabelContainer';
+import { InProps } from './interfaces';
 
 /**
  * low and high state variables are fallbacks for props (props are not required).
@@ -147,32 +148,19 @@ export const useThumbFollower = (
   return [follower, update];
 };
 
-interface InProps {
-  low: number;
-  high: number;
-  min: number;
-  max: number;
-  step: number;
-}
-
 export const useSelectedRail = (
   inPropsRef: MutableRefObject<InProps>,
   containerWidthRef: MutableRefObject<number>,
   thumbWidth: number,
   disableRange: boolean,
 ) => {
-  const {current: left} = useRef(new Animated.Value(0));
-  const {current: right} = useRef(new Animated.Value(0));
+  const [leftValue, rightValue] = getRightAndLeftValues(inPropsRef, containerWidthRef, thumbWidth, disableRange)
+  const { current: left } = useRef(new Animated.Value(leftValue));
+  const { current: right } = useRef(new Animated.Value(rightValue));
   const update = useCallback(() => {
-    const {low, high, min, max} = inPropsRef.current;
-    const {current: containerWidth} = containerWidthRef;
-    const fullScale = (max - min) / (containerWidth - thumbWidth);
-    const leftValue = (low - min) / fullScale;
-    const rightValue = (max - high) / fullScale;
-    left.setValue(disableRange ? 0 : leftValue);
-    right.setValue(
-      disableRange ? containerWidth - thumbWidth - leftValue : rightValue,
-    );
+    const [leftValue, rightValue] = getRightAndLeftValues(inPropsRef, containerWidthRef, thumbWidth, disableRange)
+    left.setValue(leftValue);
+    right.setValue(rightValue);
   }, [inPropsRef, containerWidthRef, disableRange, thumbWidth, left, right]);
   const styles = useMemo(
     () => ({
