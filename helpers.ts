@@ -1,4 +1,5 @@
-import { InProps } from "./interfaces";
+import { Animated, GestureResponderEvent } from "react-native/types";
+import { AnimatedRef, InProps } from "./interfaces";
 import { MutableRefObject } from 'react';
 
 // the best practice for accessibility is around 40, so 20 from the center of the thumb
@@ -56,15 +57,15 @@ export const getLowPosition = (
   max: number,
   containerWidth: number,
   thumbWidth: number,
-  ) => {
-  return (low - min) / (max - min) * (containerWidth - thumbWidth);
+  ): number => {
+  return ((low - min) / (max - min) * (containerWidth - thumbWidth));
 }
 
 export const getRightAndLeftValues = (
   inPropsRef: MutableRefObject<InProps>,
-  containerWidthRef,
-  thumbWidth,
-  disableRange,
+  containerWidthRef: MutableRefObject<number>,
+  thumbWidth: number,
+  disableRange: boolean,
   ) => {
   const { low, high, min, max } = inPropsRef.current;
   const { current: containerWidth } = containerWidthRef;
@@ -82,7 +83,13 @@ export const getRightAndLeftValues = (
  * Only captures the focus if the user touches one of the thumbs.
  * This is the expected behavior for a slider.
  */
- export const shouldCaptureFocus = (evt, thumbWidth, lowThumbXRef, highThumbXRef, disableRange) => {
+ export const shouldCaptureFocus = (
+    evt: GestureResponderEvent,
+    thumbWidth: number,
+    lowThumbXRef: React.MutableRefObject<Animated.Value & { _value: number }>,
+    highThumbXRef: React.MutableRefObject<Animated.Value & { _value: number }>,
+    disableRange: boolean
+  ) => {
   const { locationX } = evt.nativeEvent;
   const correctedLocationX = locationX - thumbWidth / 2; // correct for the half of the thumb width
   if (correctedLocationX - RANGE_TO_CAPTURE_FOCUS_ON_THUMB <= lowThumbXRef.current._value  && correctedLocationX + RANGE_TO_CAPTURE_FOCUS_ON_THUMB > lowThumbXRef.current._value) {

@@ -21,13 +21,17 @@
     "slider",
     "seekbar"
   ],
-  "repository" : {
+  "repository": {
     "type": "git",
     "url": "https://github.com/githuboftigran/rn-range-slider.git"
   },
-  "dependencies": {
-  },
   "devDependencies": {
+    "@types/react": "^18.2.6",
+    "typescript": "^4.6.3"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-native": ">=0.70.0"
   },
   "license": "MIT"
 }

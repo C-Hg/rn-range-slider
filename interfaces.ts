@@ -1,3 +1,5 @@
+import { Animated } from "react-native/types";
+
 export interface InProps {
   low: number;
   high: number;
@@ -5,3 +7,5 @@ export interface InProps {
   max: number;
   step: number;
 }
+
+export type AnimatedRef = Animated.Value & { _value: number }

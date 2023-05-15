@@ -10,10 +10,12 @@ import React, {
 import {
   Animated,
   GestureResponderEvent,
+  LayoutChangeEvent,
   PanResponder,
   PanResponderGestureState,
   View,
   ViewProps,
+  ViewStyle,
 } from 'react-native';
 
 import styles from './styles';
@@ -25,6 +27,7 @@ import {
   useSelectedRail,
 } from './hooks';
 import {clamp, getHighPosition, getLowPosition, getValueForPosition, isLowCloser, shouldCaptureFocus} from './helpers';
+import { AnimatedRef } from './interfaces';
 
 const trueFunc = () => true;
 const falseFunc = () => false;
@@ -88,9 +91,9 @@ const Slider: React.FC<SliderProps> = ({
     max,
     step,
   );
-  const lowThumbXRef = useRef(new Animated.Value(getLowPosition(inPropsRef.current.low, min, max, containerWidthRef.current, thumbWidth)));
-  const highThumbXRef = useRef(new Animated.Value(disableRange ? 0 : getHighPosition(inPropsRef.current.high, min, max, containerWidthRef.current, thumbWidth)));
-  const pointerX = useRef(new Animated.Value(0)).current;
+  const lowThumbXRef = useRef<AnimatedRef>(new Animated.Value(getLowPosition(inPropsRef.current.low, min, max, containerWidthRef.current, thumbWidth)) as unknown as AnimatedRef);
+  const highThumbXRef = useRef<AnimatedRef>(new Animated.Value((disableRange ? 0 : getHighPosition(inPropsRef.current.high, min, max, containerWidthRef.current, thumbWidth))) as unknown as AnimatedRef);
+  const pointerX = useRef<Animated.Value>(new Animated.Value(0)).current;
   const {current: lowThumbX} = lowThumbXRef;
   const {current: highThumbX} = highThumbXRef;
 
@@ -120,6 +123,7 @@ const Slider: React.FC<SliderProps> = ({
     lowThumbX.setValue(lowPosition);
     updateSelectedRail();
     onValueChanged?.(low, high, false);
+    
   }, [
     disableRange,
     inPropsRef,
@@ -146,7 +150,7 @@ const Slider: React.FC<SliderProps> = ({
 
   const handleContainerLayout = fixedContainerWidth ? updateThumbs() : useWidthLayout(containerWidthRef, updateThumbs);
   const handleThumbLayout = useCallback(
-    ({nativeEvent}) => {
+    ({nativeEvent}: LayoutChangeEvent) => {
       const {
         layout: {width},
       } = nativeEvent;
@@ -323,10 +327,10 @@ const Slider: React.FC<SliderProps> = ({
         {labelView}
         {notchView}
       </View>
-      <View onLayout={handleContainerLayout} style={styles.controlsContainer}>
+      <View onLayout={handleContainerLayout as (event: LayoutChangeEvent) => void} style={styles.controlsContainer}>
         <View style={railContainerStyles}>
           {renderRail()}
-          <Animated.View style={selectedRailStyle}>
+          <Animated.View style={selectedRailStyle as ViewStyle}>
             {renderRailSelected()}
           </Animated.View>
         </View>

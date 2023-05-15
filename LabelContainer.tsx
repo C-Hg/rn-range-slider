@@ -1,21 +1,28 @@
-import React, { PureComponent } from 'react';
-import { View } from 'react-native';
+import React, { MutableRefObject, PureComponent, ReactNode } from 'react';
+import { LayoutChangeEvent, View } from 'react-native';
 
-class LabelContainer extends PureComponent {
+
+type LabelContainerProps = {
+  onLayout: (event: LayoutChangeEvent) => void;
+  ref: MutableRefObject<LabelContainer | null>;
+  renderContent: (value: number) => ReactNode;
+};
+
+class LabelContainer extends React.Component<LabelContainerProps> {
 
   state = {
     value: Number.NaN,
   };
   
-  setValue = value => {
+  setValue = (value: number) => {
     this.setState({ value });
   }
 
   render() {
-    const { renderContent, ...restProps } = this.props;
+    const { onLayout, ref, renderContent } = this.props;
     const { value } = this.state;
     return (
-      <View {...restProps}>
+      <View onLayout={onLayout} ref={ref as React.RefObject<View>} >
         {renderContent(value)}
       </View>
     );

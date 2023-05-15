@@ -6,7 +6,7 @@ import React, {
   MutableRefObject,
   ReactNode,
 } from 'react';
-import {Animated, I18nManager} from 'react-native';
+import {Animated, I18nManager, LayoutChangeEvent, RegisteredStyle, StyleProp, ViewStyle} from 'react-native';
 import {clamp, getRightAndLeftValues} from './helpers';
 import styles from './styles';
 import FollowerContainer from './LabelContainer';
@@ -70,7 +70,7 @@ export const useWidthLayout = (
   callback?: (width: number) => void,
 ) => {
   return useCallback(
-    ({nativeEvent}) => {
+    ({nativeEvent}: LayoutChangeEvent) => {
       const {
         layout: {width},
       } = nativeEvent;
@@ -104,7 +104,7 @@ export const useThumbFollower = (
   renderContent: undefined | ((value: number) => ReactNode),
   isPressed: boolean,
   allowOverflow: boolean,
-) => {
+): [React.JSX.Element, (thumbPositionInView: number, value: number) => void] => {
   const xRef = useRef(new Animated.Value(0));
   const widthRef = useRef(0);
   const contentContainerRef = useRef<FollowerContainer | null>(null);
@@ -112,7 +112,7 @@ export const useThumbFollower = (
   const {current: x} = xRef;
 
   const update = useCallback(
-    (thumbPositionInView, value) => {
+    (thumbPositionInView: number, value: number) => {
       const {current: width} = widthRef;
       const {current: containerWidth} = containerWidthRef;
       const position = thumbPositionInView - width / 2;
@@ -132,7 +132,7 @@ export const useThumbFollower = (
   });
 
   if (!renderContent) {
-    return [];
+    return [<></>, () => {}];
   }
 
   const transform = {transform: [{translateX: x}]};
@@ -153,7 +153,7 @@ export const useSelectedRail = (
   containerWidthRef: MutableRefObject<number>,
   thumbWidth: number,
   disableRange: boolean,
-) => {
+): [unknown, () => void] => {
   const [leftValue, rightValue] = getRightAndLeftValues(inPropsRef, containerWidthRef, thumbWidth, disableRange)
   const { current: left } = useRef(new Animated.Value(leftValue));
   const { current: right } = useRef(new Animated.Value(rightValue));
@@ -179,7 +179,7 @@ export const useSelectedRail = (
  */
 export const useLabelContainerProps = (floating: boolean) => {
   const [labelContainerHeight, setLabelContainerHeight] = useState(0);
-  const onLayout = useCallback(({nativeEvent}) => {
+  const onLayout = useCallback(({nativeEvent}: LayoutChangeEvent) => {
     const {
       layout: {height},
     } = nativeEvent;
@@ -191,5 +191,5 @@ export const useLabelContainerProps = (floating: boolean) => {
     floating ? styles.labelFloatingContainer : styles.labelFixedContainer,
     {top},
   ];
-  return {style, onLayout: onLayout};
+  return {style, onLayout};
 };
