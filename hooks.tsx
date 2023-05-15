@@ -104,7 +104,7 @@ export const useThumbFollower = (
   renderContent: undefined | ((value: number) => ReactNode),
   isPressed: boolean,
   allowOverflow: boolean,
-): [React.JSX.Element, (thumbPositionInView: number, value: number) => void] => {
+): [JSX.Element, (thumbPositionInView: number, value: number) => void] => {
   const xRef = useRef(new Animated.Value(0));
   const widthRef = useRef(0);
   const contentContainerRef = useRef<FollowerContainer | null>(null);
