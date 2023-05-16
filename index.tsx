@@ -92,7 +92,7 @@ const Slider: React.FC<SliderProps> = ({
     step,
   );
   const lowThumbXRef = useRef<AnimatedRef>(new Animated.Value(getLowPosition(inPropsRef.current.low, min, max, containerWidthRef.current, thumbWidth)) as unknown as AnimatedRef);
-  const highThumbXRef = useRef<AnimatedRef>(new Animated.Value((disableRange ? 0 : getHighPosition(inPropsRef.current.high, min, max, containerWidthRef.current, thumbWidth))) as unknown as AnimatedRef);
+  const highThumbXRef = useRef<AnimatedRef>(new Animated.Value(disableRange ? 0 : getHighPosition(inPropsRef.current.high, min, max, containerWidthRef.current, thumbWidth)) as unknown as AnimatedRef);
   const pointerX = useRef<Animated.Value>(new Animated.Value(0)).current;
   const {current: lowThumbX} = lowThumbXRef;
   const {current: highThumbX} = highThumbXRef;

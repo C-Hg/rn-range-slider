@@ -1,32 +1,29 @@
-import React, { MutableRefObject, PureComponent, ReactNode } from 'react';
+import React, { ReactNode, forwardRef, useImperativeHandle, useState } from 'react';
 import { LayoutChangeEvent, View } from 'react-native';
 
+export type LabelContainerRef = {
+  setThumbValue: React.Dispatch<React.SetStateAction<number>>
+}
 
 type LabelContainerProps = {
   onLayout: (event: LayoutChangeEvent) => void;
-  ref: MutableRefObject<LabelContainer | null>;
   renderContent: (value: number) => ReactNode;
 };
 
-class LabelContainer extends React.Component<LabelContainerProps> {
+const LabelContainer = forwardRef<LabelContainerRef, LabelContainerProps>((props: LabelContainerProps, ref) => {
+  const [thumbValue, setThumbValue] = useState(Number.NaN);
 
-  state = {
-    value: Number.NaN,
-  };
-  
-  setValue = (value: number) => {
-    this.setState({ value });
-  }
+  const { onLayout, renderContent } = props;
 
-  render() {
-    const { onLayout, ref, renderContent } = this.props;
-    const { value } = this.state;
-    return (
-      <View onLayout={onLayout} ref={ref as React.RefObject<View>} >
-        {renderContent(value)}
-      </View>
-    );
-  }
-}
+  useImperativeHandle(ref, () => ({
+    setThumbValue,
+  }));
+
+  return (
+    <View onLayout={onLayout} ref={ref as React.RefObject<View>} >
+      {renderContent(thumbValue)}
+    </View>
+  );
+})
 
 export default LabelContainer;

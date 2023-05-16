@@ -9,7 +9,7 @@ import React, {
 import {Animated, I18nManager, LayoutChangeEvent, RegisteredStyle, StyleProp, ViewStyle} from 'react-native';
 import {clamp, getRightAndLeftValues} from './helpers';
 import styles from './styles';
-import FollowerContainer from './LabelContainer';
+import FollowerContainer, { LabelContainerRef } from './LabelContainer';
 import { InProps } from './interfaces';
 
 /**
@@ -107,7 +107,7 @@ export const useThumbFollower = (
 ): [JSX.Element, (thumbPositionInView: number, value: number) => void] => {
   const xRef = useRef(new Animated.Value(0));
   const widthRef = useRef(0);
-  const contentContainerRef = useRef<FollowerContainer | null>(null);
+  const contentContainerRef = useRef<LabelContainerRef>(null);
 
   const {current: x} = xRef;
 
@@ -119,7 +119,7 @@ export const useThumbFollower = (
       xRef.current.setValue(
         allowOverflow ? position : clamp(position, 0, containerWidth - width),
       );
-      contentContainerRef.current?.setValue(value);
+      contentContainerRef.current?.setThumbValue(value);
     },
     [widthRef, containerWidthRef, allowOverflow],
   );
